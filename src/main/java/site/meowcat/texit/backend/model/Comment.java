@@ -20,6 +20,7 @@ public class Comment {
     @ManyToOne(optional = false)
     private User author;
     @ManyToOne(optional = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Post post;
 
     public Comment() {}
