@@ -29,4 +29,9 @@ public class UserController {
     public User getUser(@PathVariable String username) {
         return userService.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
     }
+
+    @GetMapping
+    public java.util.List<User> getAllUsers() {
+        return userService.findAll();
+    }
 }

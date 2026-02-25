@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Texit - Mutt-like Reddit</title>
+    <title>Texit - No Mouse Posting!</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div id="terminal">
-        <header id="top-bar">Texit: [Index] - (j:down k:up Enter:view p:post r:refresh q:back)</header>
+        <header id="top-bar">Texit: [Index] - (j:down k:up Enter:view p:post r:refresh q:logout)</header>
         <main id="content">
             <div id="auth-view" style="display: none;">
                 <div id="auth-title" style="margin-bottom: 1em;">Login / Register</div>
@@ -53,6 +53,21 @@
                     <textarea id="comment-body-input" class="mutt-input" rows="5"></textarea>
                 </div>
                 <div class="help-line">(Ctrl+S: Submit, Esc: Cancel)</div>
+            </div>
+            <div id="admin-view" style="display: none;">
+                <div id="admin-title" style="margin-bottom: 1em;">Admin Dashboard - User List</div>
+                <table id="user-table">
+                    <thead>
+                        <tr>
+                            <th class="col-num">#</th>
+                            <th class="col-username">Username</th>
+                            <th class="col-role">Role</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-list">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
             </div>
         </main>
         <footer id="status-bar">-- Texit: Index [1/1] (100%) --</footer>

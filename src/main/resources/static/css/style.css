@@ -58,6 +58,8 @@ td {
 .col-votes { width: 80px; }
 .col-author { width: 150px; }
 .col-title { width: auto; }
+.col-username { width: 150px; }
+.col-role { width: 100px; }
 
 hr {
     border: 0;
