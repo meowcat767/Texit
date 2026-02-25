@@ -2,6 +2,8 @@ package site.meowcat.texit.backend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import site.meowcat.texit.backend.model.Comment;
 import site.meowcat.texit.backend.model.Post;
 import site.meowcat.texit.backend.model.User;
@@ -31,20 +33,17 @@ public class CommentController {
     }
 
     @PostMapping("/post/{postId}")
-    public Comment addComment(@PathVariable Long postId, @RequestBody CommentRequest commentRequest) {
+    public Comment addComment(@PathVariable Long postId, @RequestBody CommentRequest commentRequest, @AuthenticationPrincipal UserDetails userDetails) {
         Post post = postService.getPostById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-        User author = userService.findByUsername(commentRequest.getUsername())
-                .orElseGet(() -> userService.createUser(commentRequest.getUsername(), "password"));
+        User author = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return commentService.addComment(commentRequest.getBody(), author, post);
     }
 
     public static class CommentRequest {
         private String body;
-        private String username;
 
         public String getBody() { return body; }
         public void setBody(String body) { this.body = body; }
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
     }
 }

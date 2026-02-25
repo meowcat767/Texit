@@ -10,6 +10,12 @@
     <div id="terminal">
         <header id="top-bar">Texit: [Index] - (j:down k:up Enter:view p:post r:refresh q:back)</header>
         <main id="content">
+            <div id="auth-view" style="display: none;">
+                <div id="auth-title" style="margin-bottom: 1em;">Login / Register</div>
+                <div>Username: <input type="text" id="auth-username" class="terminal-input"></div>
+                <div>Password: <input type="password" id="auth-password" class="terminal-input"></div>
+                <div style="margin-top: 1em;">(L:Login R:Register)</div>
+            </div>
             <div id="list-view">
                 <table id="post-table">
                     <thead>
@@ -37,7 +43,6 @@
             </div>
             <div id="compose-view" style="display: none;">
                 <h2 id="compose-title">Compose</h2>
-                <div class="input-line">Username: <input type="text" id="username-input" class="mutt-input"></div>
                 <div id="post-inputs">
                     <div class="input-line">Subject:  <input type="text" id="subject-input" class="mutt-input"></div>
                     <div class="input-line">Body:</div>

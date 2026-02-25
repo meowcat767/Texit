@@ -2,6 +2,7 @@ package site.meowcat.texit.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import site.meowcat.texit.backend.model.User;
 import site.meowcat.texit.backend.repository.UserRepository;
 
@@ -13,8 +14,14 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public User createUser(String username, String password) {
-        User user = new User(username, password);
+        User user = new User(username, passwordEncoder.encode(password));
+        if ("meowcat767".equals(username)) {
+            user.setRole("ADMIN");
+        }
         return userRepository.save(user);
     }
 

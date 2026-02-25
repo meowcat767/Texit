@@ -2,6 +2,8 @@ package site.meowcat.texit.backend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import site.meowcat.texit.backend.model.Post;
 import site.meowcat.texit.backend.model.User;
 import site.meowcat.texit.backend.service.PostService;
@@ -24,10 +26,9 @@ public class PostController {
     }
 
     @PostMapping
-    public Post createPost(@RequestBody PostRequest postRequest) {
-        // Simplified: using a hardcoded user or from a fake header for now as we don't have full auth
-        User author = userService.findByUsername(postRequest.getUsername())
-                .orElseGet(() -> userService.createUser(postRequest.getUsername(), "password"));
+    public Post createPost(@RequestBody PostRequest postRequest, @AuthenticationPrincipal UserDetails userDetails) {
+        User author = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return postService.createPost(postRequest.getTitle(), postRequest.getBody(), author);
     }
 
@@ -39,13 +40,10 @@ public class PostController {
     public static class PostRequest {
         private String title;
         private String body;
-        private String username;
 
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }
         public String getBody() { return body; }
         public void setBody(String body) { this.body = body; }
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
     }
 }

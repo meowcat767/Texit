@@ -2,6 +2,8 @@ package site.meowcat.texit.backend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import site.meowcat.texit.backend.model.Post;
 import site.meowcat.texit.backend.model.User;
 import site.meowcat.texit.backend.service.PostService;
@@ -22,19 +24,16 @@ public class VoteController {
     private UserService userService;
 
     @PostMapping("/post/{postId}")
-    public void vote(@PathVariable Long postId, @RequestBody VoteRequest voteRequest) {
+    public void vote(@PathVariable Long postId, @RequestBody VoteRequest voteRequest, @AuthenticationPrincipal UserDetails userDetails) {
         Post post = postService.getPostById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-        User user = userService.findByUsername(voteRequest.getUsername())
-                .orElseGet(() -> userService.createUser(voteRequest.getUsername(), "password"));
+        User user = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         voteService.vote(post, user, voteRequest.getValue());
     }
 
     public static class VoteRequest {
-        private String username;
         private int value; // 1, -1, or 0 to remove
 
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
         public int getValue() { return value; }
         public void setValue(int value) { this.value = value; }
     }

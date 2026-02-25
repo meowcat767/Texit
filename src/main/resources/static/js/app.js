@@ -1,11 +1,14 @@
 let posts = [];
-let currentView = 'index'; // 'index', 'detail', 'compose-post', 'compose-comment'
+let currentView = 'index'; // 'index', 'detail', 'compose-post', 'compose-comment', 'auth'
 let selectedIndex = 0;
 let currentPost = null;
+let currentUser = null;
+let authHeader = null;
 
 const listView = document.getElementById('list-view');
 const detailView = document.getElementById('detail-view');
 const composeView = document.getElementById('compose-view');
+const authView = document.getElementById('auth-view');
 const postList = document.getElementById('post-list');
 const postHeader = document.getElementById('post-header');
 const postBody = document.getElementById('post-body');
@@ -13,7 +16,8 @@ const commentList = document.getElementById('comment-list');
 const statusBar = document.getElementById('status-bar');
 const topBar = document.getElementById('top-bar');
 
-const usernameInput = document.getElementById('username-input');
+const authUsernameInput = document.getElementById('auth-username');
+const authPasswordInput = document.getElementById('auth-password');
 const subjectInput = document.getElementById('subject-input');
 const bodyInput = document.getElementById('body-input');
 const commentBodyInput = document.getElementById('comment-body-input');
@@ -21,8 +25,55 @@ const postInputs = document.getElementById('post-inputs');
 const commentInputs = document.getElementById('comment-inputs');
 const composeTitle = document.getElementById('compose-title');
 
+async function checkAuth() {
+    const response = await fetch('/api/users/me', { headers: authHeader ? { 'Authorization': authHeader } : {} });
+    if (response.ok) {
+        currentUser = await response.json();
+        showView('index');
+        fetchPosts();
+    } else {
+        showView('auth');
+    }
+}
+
+async function login() {
+    const username = authUsernameInput.value;
+    const password = authPasswordInput.value;
+    const header = 'Basic ' + btoa(username + ':' + password);
+    const response = await fetch('/api/users/me', { headers: { 'Authorization': header } });
+    if (response.ok) {
+        currentUser = await response.json();
+        authHeader = header;
+        authUsernameInput.value = '';
+        authPasswordInput.value = '';
+        showView('index');
+        fetchPosts();
+    } else {
+        alert('Login failed');
+    }
+}
+
+async function register() {
+    const username = authUsernameInput.value;
+    const password = authPasswordInput.value;
+    const response = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+    if (response.ok) {
+        alert('Registration successful. You can now login.');
+    } else {
+        alert('Registration failed');
+    }
+}
+
 async function fetchPosts() {
-    const response = await fetch('/api/posts');
+    const response = await fetch('/api/posts', { headers: { 'Authorization': authHeader } });
+    if (response.status === 401) {
+        showView('auth');
+        return;
+    }
     posts = await response.json();
     renderIndex();
 }
@@ -47,7 +98,8 @@ function updateStatus() {
     if (currentView === 'index') {
         const count = posts.length;
         const current = count > 0 ? selectedIndex + 1 : 0;
-        statusBar.textContent = `-- Texit: Index [${current}/${count}] (${count > 0 ? Math.round((current/count)*100) : 0}%) --`;
+        const userStr = currentUser ? ` [User: ${currentUser.username}${currentUser.role === 'ADMIN' ? '*' : ''}]` : '';
+        statusBar.textContent = `-- Texit: Index [${current}/${count}] (${count > 0 ? Math.round((current/count)*100) : 0}%) --${userStr}`;
         topBar.textContent = 'Texit: [Index] - (j:down k:up Enter:view p:post r:refresh q:back)';
     } else if (currentView === 'detail') {
         statusBar.textContent = `-- Texit: Post View [${currentPost.title}] --`;
@@ -55,11 +107,14 @@ function updateStatus() {
     } else if (currentView.startsWith('compose')) {
         statusBar.textContent = `-- Texit: Compose --`;
         topBar.textContent = 'Texit: [Compose] - (Ctrl+S: Submit, Esc: Cancel)';
+    } else if (currentView === 'auth') {
+        statusBar.textContent = '-- Texit: Login/Register Required --';
+        topBar.textContent = 'Texit: [Login] - (l:login r:register)';
     }
 }
 
 async function viewPost(id) {
-    const response = await fetch(`/api/posts/${id}`);
+    const response = await fetch(`/api/posts/${id}`, { headers: { 'Authorization': authHeader } });
     currentPost = await response.json();
     
     postHeader.innerHTML = `
@@ -70,7 +125,7 @@ async function viewPost(id) {
     `;
     postBody.textContent = currentPost.body;
     
-    const commentResponse = await fetch(`/api/comments/post/${id}`);
+    const commentResponse = await fetch(`/api/comments/post/${id}`, { headers: { 'Authorization': authHeader } });
     const comments = await commentResponse.json();
     
     commentList.innerHTML = '';
@@ -92,18 +147,18 @@ function showView(view) {
     listView.style.display = view === 'index' ? 'block' : 'none';
     detailView.style.display = view === 'detail' ? 'block' : 'none';
     composeView.style.display = view.startsWith('compose') ? 'block' : 'none';
+    authView.style.display = view === 'auth' ? 'block' : 'none';
     updateStatus();
 }
 
 async function submitPost() {
-    const username = usernameInput.value || 'anonymous';
     const title = subjectInput.value;
     const body = bodyInput.value;
     
     await fetch('/api/posts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, title, body })
+        headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+        body: JSON.stringify({ title, body })
     });
     
     subjectInput.value = '';
@@ -113,13 +168,12 @@ async function submitPost() {
 }
 
 async function submitComment() {
-    const username = usernameInput.value || 'anonymous';
     const body = commentBodyInput.value;
     
     await fetch(`/api/comments/post/${currentPost.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, body })
+        headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+        body: JSON.stringify({ body })
     });
     
     commentBodyInput.value = '';
@@ -127,16 +181,23 @@ async function submitComment() {
 }
 
 async function vote(value) {
-    const username = usernameInput.value || 'anonymous';
     await fetch(`/api/votes/post/${currentPost.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, value })
+        headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+        body: JSON.stringify({ value })
     });
     viewPost(currentPost.id);
 }
 
 window.addEventListener('keydown', (e) => {
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        if (e.key === 'Escape') {
+             document.activeElement.blur();
+             return;
+        }
+        if (!(e.ctrlKey && e.key === 's')) return;
+    }
+
     if (currentView === 'index') {
         if (e.key === 'j') {
             if (selectedIndex < posts.length - 1) {
@@ -157,6 +218,8 @@ window.addEventListener('keydown', (e) => {
             showView('compose-post');
         } else if (e.key === 'r') {
             fetchPosts();
+        } else if (e.key === 'q') {
+             // Maybe logout?
         }
     } else if (currentView === 'detail') {
         if (e.key === 'q') {
@@ -182,7 +245,13 @@ window.addEventListener('keydown', (e) => {
                 submitComment();
             }
         }
+    } else if (currentView === 'auth') {
+        if (e.key === 'l') {
+            login();
+        } else if (e.key === 'r') {
+            register();
+        }
     }
 });
 
-fetchPosts();
+checkAuth();
