@@ -5,11 +5,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Column;
+import jakarta.persistence.Table;
 import site.meowcat.texit.backend.model.User;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "posts")
 public class Post {
 
     @Id
