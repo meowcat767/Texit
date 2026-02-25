@@ -11,22 +11,22 @@ import site.meowcat.texit.backend.model.User;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "posts")
+@Table(name = "app_posts")
 public class Post {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
     private String title;
 
-    @Column(length = 5000)
+    @Column(columnDefinition = "TEXT")
     private String body;
 
     private int votes = 0;
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User author;
 
     public Post() { }

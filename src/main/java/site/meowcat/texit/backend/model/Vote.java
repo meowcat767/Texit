@@ -7,14 +7,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "votes")
+@Table(name = "app_votes")
 public class Vote {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
     private int value; // 1 = upvote, -1 = downvote
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User user;
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Post post;
 
     public Vote() {}

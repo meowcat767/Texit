@@ -5,19 +5,21 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "comments")
+@Table(name = "app_comments")
 public class Comment {
-    @Id @GeneratedValue
-    private long id;
+    @Id @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    private Long id;
+    @Column(columnDefinition = "TEXT")
     private String body;
     private LocalDateTime createdAt = LocalDateTime.now();
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User author;
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Post post;
 
     public Comment() {}
@@ -28,7 +30,7 @@ public class Comment {
         this.post = post;
     }
 
-    public long getId() { return id; }
+    public Long getId() { return id; }
     public String getBody() { return body; }
     public void setBody(String body) { this.body = body; }
     public LocalDateTime getCreatedAt() { return createdAt; }

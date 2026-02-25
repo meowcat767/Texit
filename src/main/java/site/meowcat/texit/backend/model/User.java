@@ -6,10 +6,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users")
+@Table(name = "app_users")
 public class User {
-    @Id @GeneratedValue
-    private long id;
+    @Id @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    private Long id;
     private String username;
     private String password; // hashed
     private String role = "USER"; // can be USER or ADMIN
@@ -21,7 +21,7 @@ public class User {
         this.password = password;
     }
 
-    public long getId() { return id; }
+    public Long getId() { return id; }
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }
