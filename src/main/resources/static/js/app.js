@@ -152,15 +152,18 @@ function showView(view) {
 }
 
 async function submitPost() {
-    const title = subjectInput.value;
-    const body = bodyInput.value;
+    const title = subjectInput.value.trim();
+    const body = bodyInput.value.trim();
+    if (!title || !body) {
+        alert('Post title and body cannot be empty.')
+        return;
+    }
     
     await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
         body: JSON.stringify({ title, body })
     });
-    
     subjectInput.value = '';
     bodyInput.value = '';
     showView('index');
@@ -168,7 +171,11 @@ async function submitPost() {
 }
 
 async function submitComment() {
-    const body = commentBodyInput.value;
+    const body = commentBodyInput.value.trim();
+    if (!title || !body){
+        alert('Comment cannot be empty.')
+        return;
+    }
     
     await fetch(`/api/comments/post/${currentPost.id}`, {
         method: 'POST',
