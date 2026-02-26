@@ -21,7 +21,8 @@ public class UserController {
 
     @GetMapping("/me")
     public User getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) return null;
+        if (userDetails == null)
+            return null;
         return userService.findByUsername(userDetails.getUsername()).orElse(null);
     }
 
@@ -33,5 +34,12 @@ public class UserController {
     @GetMapping
     public java.util.List<User> getAllUsers() {
         return userService.findAll();
+    }
+
+    @PostMapping("/{id}/ban")
+    public User banUser(@PathVariable Long id) {
+        User user = userService.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setBanned(!user.isBanned()); // Toggle banned status
+        return userService.save(user);
     }
 }

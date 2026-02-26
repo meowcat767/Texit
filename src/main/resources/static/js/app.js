@@ -141,8 +141,11 @@ function renderAdmin() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="col-num">${index + 1}</td>
-            <td class="col-username">${user.username}</td>
+            <td class="col-username">${user.username}${user.banned ? ' [BANNED]' : ''}</td>
             <td class="col-role">${user.role}</td>
+            <td class="col-actions">
+                <button onclick="banUser(${user.id})">${user.banned ? 'Unban' : 'Ban'}</button>
+            </td>
         `;
         userList.appendChild(tr);
     });
@@ -174,7 +177,8 @@ function updateStatus() {
         topBar.textContent = `Texit: [Index] - (j:down k:up Enter:view p:post r:refresh q:logout${adminKey})`;
     } else if (currentView === 'detail') {
         statusBar.textContent = `-- Texit: Post View [${currentPost.title}] --`;
-        topBar.textContent = 'Texit: [Post] - (c:comment v:upvote b:downvote q:back)';
+        const adminKey = currentUser && currentUser.role === 'ADMIN' ? ' d:delete' : '';
+        topBar.textContent = `Texit: [Post] - (c:comment v:upvote b:downvote q:back${adminKey})`;
     } else if (currentView.startsWith('compose')) {
         statusBar.textContent = `-- Texit: Compose --`;
         topBar.textContent = 'Texit: [Compose] - (Ctrl+S: Submit, Esc: Cancel)';
@@ -202,6 +206,7 @@ async function viewPost(id) {
             From:    ${currentPost.author.username}<br>
             Date:    ${new Date(currentPost.createdAt).toLocaleString()}<br>
             Votes:   ${currentPost.votes}
+            ${currentUser && currentUser.role === 'ADMIN' ? '<br><button onclick="deletePost(' + currentPost.id + ')">[Delete Post]</button>' : ''}
         `;
         postBody.textContent = currentPost.body;
 
@@ -305,6 +310,43 @@ async function vote(value) {
     }
 }
 
+async function deletePost(id) {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    try {
+        const response = await fetch(`/api/posts/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': authHeader }
+        });
+        if (response.ok) {
+            alert('Post deleted successfully');
+            showView('index');
+            fetchPosts();
+        } else {
+            alert('Failed to delete post: ' + response.statusText);
+        }
+    } catch (error) {
+        alert('Error deleting post: ' + error.message);
+    }
+}
+
+async function banUser(id) {
+    if (!confirm('Are you sure you want to toggle ban for this user?')) return;
+    try {
+        const response = await fetch(`/api/users/${id}/ban`, {
+            method: 'POST',
+            headers: { 'Authorization': authHeader }
+        });
+        if (response.ok) {
+            alert('User ban status toggled');
+            fetchUsers();
+        } else {
+            alert('Failed to ban user: ' + response.statusText);
+        }
+    } catch (error) {
+        alert('Error banning user: ' + error.message);
+    }
+}
+
 window.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
         if (e.key === 'Escape') {
@@ -352,6 +394,8 @@ window.addEventListener('keydown', (e) => {
             vote(1);
         } else if (e.key === 'b') {
             vote(-1);
+        } else if (e.key === 'd' && currentUser && currentUser.role === 'ADMIN') {
+            deletePost(currentPost.id);
         }
     } else if (currentView.startsWith('compose')) {
         if (e.key === 'Escape') {
