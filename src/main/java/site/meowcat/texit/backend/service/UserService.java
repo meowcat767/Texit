@@ -1,8 +1,10 @@
 package site.meowcat.texit.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 import site.meowcat.texit.backend.model.User;
 import site.meowcat.texit.backend.repository.UserRepository;
 
@@ -21,6 +23,15 @@ public class UserService {
         User user = new User(username, passwordEncoder.encode(password));
         if ("meowcat767".equals(username)) {
             user.setRole("ADMIN");
+        }
+        if (username.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username cannot be empty");
+        }
+        if (password == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty");
+        }
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already exists");
         }
         return userRepository.save(user);
     }
