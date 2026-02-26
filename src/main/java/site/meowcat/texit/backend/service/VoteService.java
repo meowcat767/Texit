@@ -9,10 +9,13 @@ import site.meowcat.texit.backend.model.Vote;
 import site.meowcat.texit.backend.repository.PostRepository;
 import site.meowcat.texit.backend.repository.VoteRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 @Service
 public class VoteService {
+    private static final Logger logger = LoggerFactory.getLogger(VoteService.class);
 
     @Autowired
     private VoteRepository voteRepository;
@@ -27,6 +30,7 @@ public class VoteService {
         }
 
         Optional<Vote> existingVote = voteRepository.findByPostAndUser(post, user);
+        logger.info("User {} is voting {} on post {}", user.getUsername(), value, post.getId());
 
         if (existingVote.isPresent()) {
             Vote vote = existingVote.get();

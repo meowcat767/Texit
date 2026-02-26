@@ -20,17 +20,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/api/users/register").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users").hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
-            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-            .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint((request, response, authException) -> {
-                response.sendError(org.springframework.http.HttpStatus.UNAUTHORIZED.value(), authException.getMessage());
-            }));
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/api/users/register").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint((request, response, authException) -> {
+                    response.sendError(org.springframework.http.HttpStatus.UNAUTHORIZED.value(),
+                            authException.getMessage());
+                }));
         return http.build();
     }
 
@@ -43,11 +43,16 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> {
             User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            if (user.isBanned()) {
+                throw new org.springframework.security.authentication.DisabledException("User is banned");
+            }
+
             return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
-                .password(user.getPassword())
-                .roles(user.getRole())
-                .build();
+                    .password(user.getPassword())
+                    .roles(user.getRole())
+                    .build();
         };
     }
 }

@@ -169,7 +169,7 @@ function updateStatus() {
         const count = posts.length;
         const current = count > 0 ? selectedIndex + 1 : 0;
         const userStr = currentUser ? ` [User: ${currentUser.username}${currentUser.role === 'ADMIN' ? '*' : ''}]` : '';
-        statusBar.textContent = `-- Texit: Index [${current}/${count}] (${count > 0 ? Math.round((current/count)*100) : 0}%) --${userStr}`;
+        statusBar.textContent = `-- Texit: Index [${current}/${count}] (${count > 0 ? Math.round((current / count) * 100) : 0}%) --${userStr}`;
         const adminKey = currentUser && currentUser.role === 'ADMIN' ? ' a:admin' : '';
         topBar.textContent = `Texit: [Index] - (j:down k:up Enter:view p:post r:refresh q:logout${adminKey})`;
     } else if (currentView === 'detail') {
@@ -196,7 +196,7 @@ async function viewPost(id) {
             return;
         }
         currentPost = await response.json();
-        
+
         postHeader.innerHTML = `
             Subject: ${currentPost.title}<br>
             From:    ${currentPost.author.username}<br>
@@ -204,10 +204,10 @@ async function viewPost(id) {
             Votes:   ${currentPost.votes}
         `;
         postBody.textContent = currentPost.body;
-        
+
         const commentResponse = await fetch(`/api/comments/post/${id}`, { headers: { 'Authorization': authHeader } });
         const comments = await commentResponse.json();
-        
+
         commentList.innerHTML = '';
         comments.forEach(comment => {
             const div = document.createElement('div');
@@ -218,7 +218,7 @@ async function viewPost(id) {
             `;
             commentList.appendChild(div);
         });
-        
+
         showView('detail');
     } catch (error) {
         alert('Error loading post: ' + error.message);
@@ -242,7 +242,7 @@ async function submitPost() {
         alert('Post title and body cannot be empty.')
         return;
     }
-    
+
     try {
         const response = await fetch('/api/posts', {
             method: 'POST',
@@ -264,11 +264,11 @@ async function submitPost() {
 
 async function submitComment() {
     const body = commentBodyInput.value.trim();
-    if (!body){
+    if (!body) {
         alert('Comment cannot be empty.')
         return;
     }
-    
+
     try {
         const response = await fetch(`/api/comments/post/${currentPost.id}`, {
             method: 'POST',
@@ -296,9 +296,11 @@ async function vote(value) {
         if (response.ok) {
             viewPost(currentPost.id);
         } else {
+            console.error('Vote failed:', response.status, response.statusText);
             alert('Failed to vote: ' + response.statusText);
         }
     } catch (error) {
+        console.error('Vote error:', error);
         alert('Error voting: ' + error.message);
     }
 }
@@ -306,8 +308,8 @@ async function vote(value) {
 window.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
         if (e.key === 'Escape') {
-             document.activeElement.blur();
-             return;
+            document.activeElement.blur();
+            return;
         }
         if (!(e.ctrlKey && e.key === 's')) return;
     }
@@ -333,10 +335,10 @@ window.addEventListener('keydown', (e) => {
         } else if (e.key === 'r') {
             fetchPosts();
         } else if (e.key === 'q') {
-             logout();
+            logout();
         } else if (e.key === 'a' && currentUser && currentUser.role === 'ADMIN') {
-             showView('admin');
-             fetchUsers();
+            showView('admin');
+            fetchUsers();
         }
     } else if (currentView === 'detail') {
         if (e.key === 'q') {
