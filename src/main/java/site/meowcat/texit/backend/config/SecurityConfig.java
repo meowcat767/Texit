@@ -28,7 +28,9 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-            .httpBasic(Customizer.withDefaults());
+            .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint((request, response, authException) -> {
+                response.sendError(org.springframework.http.HttpStatus.UNAUTHORIZED.value(), authException.getMessage());
+            }));
         return http.build();
     }
 
